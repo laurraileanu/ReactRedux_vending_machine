@@ -150,7 +150,7 @@ class VendingMachine extends Component {
       );
       //check if the product has enough quantity
       if (product.qtty > 0) {
-        //check if you have enough balance for buying the choosed product
+        //check if you have enough balance for buying the chosen product
         if (this.state.balance >= product.price) {
           this.setState((prevState) => {
             const updatedItems = [...prevState.items];
