@@ -138,9 +138,9 @@ class VendingMachine extends Component {
 
     // check if the combination has a coresponding product
     let validCombinations = [];
-    this.state.items.map((item) => {
+    this.state.items.forEach((item) => {
       const combination = item.keyCode;
-      return validCombinations.push(combination);
+      validCombinations.push(combination);
     });
 
     if (validCombinations.includes(combination)) {
