@@ -106,11 +106,10 @@ class VendingMachine extends Component {
   // handle submit amount form
   addAmountHandler = (event) => {
     event.preventDefault();
-    this.setState((prevState) => {
-      const value = parseInt(prevState.amountInput);
+    const value = parseInt(this.state.amountInput);
 
+    this.setState((prevState) => {
       return {
-        ...prevState,
         balance: prevState.balance + value,
         amountInput: "",
       };
@@ -121,14 +120,11 @@ class VendingMachine extends Component {
   handleKeyCombination = (key) => {
     if (this.state.keyCombination.length > 1) return false; //if the combination has more than 2 chars stop pushing keys into array
 
-    this.setState((prevState) => {
-      const result = [...prevState.keyCombination];
-      result.push(key);
+    const result = [...this.state.keyCombination];
+    result.push(key);
 
-      return {
-        ...prevState,
-        keyCombination: result,
-      };
+    this.setState({
+      keyCombination: result,
     });
   };
 
@@ -152,18 +148,16 @@ class VendingMachine extends Component {
       if (product.qtty > 0) {
         //check if you have enough balance for buying the chosen product
         if (this.state.balance >= product.price) {
+          const updatedItems = [...this.state.items];
+          // get the index of updated product
+          const indexOfUpdatedProduct = this.state.items.indexOf(product);
+          // make a copy of the product
+          const updatedProduct = { ...product };
+          // update inmutably the qtti and the items copy
+          updatedProduct.qtty = product.qtty - 1;
+          updatedItems[indexOfUpdatedProduct] = updatedProduct;
           this.setState((prevState) => {
-            const updatedItems = [...prevState.items];
-            // get the index of updated product
-            const indexOfUpdatedProduct = this.state.items.indexOf(product);
-            // make a copy of the product
-            const updatedProduct = { ...product };
-            // update inmutably the qtti and the items copy
-            updatedProduct.qtty = product.qtty - 1;
-            updatedItems[indexOfUpdatedProduct] = updatedProduct;
-
             return {
-              ...prevState,
               balance: prevState.balance - product.price, //updating balance
               feedback: {
                 message: `You have successfully purchased ${product.name}`,
