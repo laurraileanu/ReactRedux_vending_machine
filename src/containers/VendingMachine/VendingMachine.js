@@ -5,6 +5,9 @@ import Display from "components/Display/Display";
 import BalanceHolder from "components/BalanceHolder/BalanceHolder";
 import Controls from "components/Controls/Controls";
 
+import { connect } from "react-redux";
+import * as actionCreators from "store/actions/reducerActions";
+
 class VendingMachine extends Component {
   state = {
     keyCombination: [],
@@ -13,89 +16,6 @@ class VendingMachine extends Component {
       message: null,
       type: "",
     },
-    balance: 100,
-    keypad: [
-      {
-        firstL: "A",
-        id: 1,
-      },
-      {
-        firstL: "B",
-        id: 2,
-      },
-      {
-        firstL: "C",
-        id: 3,
-      },
-      {
-        firstL: "1",
-        id: 4,
-      },
-      {
-        firstL: "2",
-        id: 5,
-      },
-      {
-        firstL: "3",
-        id: 6,
-      },
-    ],
-    items: [
-      {
-        keyCode: "A1",
-        qtty: 8,
-        price: 20,
-        name: "Snickers",
-      },
-      {
-        keyCode: "A2",
-        qtty: 5,
-        price: 15,
-        name: "Bounty",
-      },
-      {
-        keyCode: "A3",
-        qtty: 10,
-        price: 10,
-        name: "Mars",
-      },
-      {
-        keyCode: "B1",
-        qtty: 2,
-        price: 20,
-        name: "Kit Kat",
-      },
-      {
-        keyCode: "B2",
-        qtty: 1,
-        price: 75,
-        name: "M&Ms",
-      },
-      {
-        keyCode: "B3",
-        qtty: 6,
-        price: 22,
-        name: "Coca Cola",
-      },
-      {
-        keyCode: "C1",
-        qtty: 0,
-        price: 11,
-        name: "Fanta",
-      },
-      {
-        keyCode: "C2",
-        qtty: 8,
-        price: 32,
-        name: "Sprite",
-      },
-      {
-        keyCode: "C3",
-        qtty: 8,
-        price: 50,
-        name: "Cola Zero",
-      },
-    ],
   };
 
   // handle amount input change
@@ -108,12 +28,8 @@ class VendingMachine extends Component {
     event.preventDefault();
     const value = parseInt(this.state.amountInput);
 
-    this.setState((prevState) => {
-      return {
-        balance: prevState.balance + value,
-        amountInput: "",
-      };
-    });
+    this.props.onAddAmount(value);
+    this.setState({ amountInput: "" });
   };
 
   // handle the combination from unlocked controls
@@ -132,9 +48,13 @@ class VendingMachine extends Component {
   handleBuy = () => {
     const combination = this.state.keyCombination.join("");
     // check if the combination has a coresponding product
-    const product = this.state.items.find(
+
+    // get the index of updated product
+    const indexOfUpdatedProduct = this.props.items.findIndex(
       (item) => item.keyCode === combination
     );
+    //the to be updated product
+    const product = this.props.items[indexOfUpdatedProduct];
 
     if (!!product) {
       //if it has a coresponding product procede with updating balance and qtti
@@ -142,37 +62,22 @@ class VendingMachine extends Component {
       //check if the product has enough quantity
       if (product.qtty > 0) {
         //check if you have enough balance for buying the chosen product
-        if (this.state.balance >= product.price) {
-          const updatedItems = [...this.state.items];
-
-          // get the index of updated product
-          const indexOfUpdatedProduct = this.state.items.findIndex(
-            (item) => item.keyCode === combination
-          );
-
-          // make a copy of the product
-          const updatedProduct = { ...product };
-
-          // update inmutably the qtti and the items copy
-          updatedProduct.qtty = product.qtty - 1;
-          updatedItems[indexOfUpdatedProduct] = updatedProduct;
-          this.setState((prevState) => {
-            return {
-              balance: prevState.balance - product.price, //updating balance
-              feedback: {
-                message: `You have successfully purchased ${product.name}`,
-                type: "success",
-              },
-              keyCombination: [],
-              items: updatedItems,
-            };
+        if (this.props.balance >= product.price) {
+          this.props.onSubtractAmount(product.price);
+          this.props.onUpdateIems(indexOfUpdatedProduct);
+          this.setState({
+            feedback: {
+              message: `You have successfully purchased ${product.name}`,
+              type: "success",
+            },
+            keyCombination: [],
           });
         } else {
           // if not enough balance display feedback
           this.setState({
             feedback: {
               message: `Insert ${
-                product.price - this.state.balance
+                product.price - this.props.balance
               }$ more to buy ${product.name}`,
               type: "danger",
             },
@@ -205,13 +110,13 @@ class VendingMachine extends Component {
       <div className="bg-primary p-5 border rounded">
         <Row>
           <Col lg={8}>
-            <Panel items={this.state.items} />
+            <Panel items={this.props.items} />
           </Col>
           <Col lg={4}>
             <Display
               feedback={this.state.feedback}
               combination={this.state.keyCombination.join("")}
-              balance={this.state.balance}
+              balance={this.props.balance}
             />
             <BalanceHolder
               changeInputValue={this.handleAmountChange}
@@ -222,8 +127,8 @@ class VendingMachine extends Component {
               cancel={() => this.setState({ keyCombination: [] })}
               buy={this.handleBuy}
               onPress={this.handleKeyCombination}
-              balance={this.state.balance}
-              keypad={this.state.keypad}
+              balance={this.props.balance}
+              keypad={this.props.keypad}
             />
           </Col>
         </Row>
@@ -232,4 +137,21 @@ class VendingMachine extends Component {
   }
 }
 
-export default VendingMachine;
+const mapStateToProps = (state) => {
+  return {
+    keypad: state.keypad,
+    balance: state.balance,
+    items: state.items,
+  };
+};
+
+const mapDispatchToProps = (dispatch) => {
+  return {
+    onAddAmount: (value) => dispatch(actionCreators.add(value)),
+    onSubtractAmount: (value) => dispatch(actionCreators.substract(value)),
+    onUpdateIems: (productIndex) =>
+      dispatch(actionCreators.updateItems(productIndex)),
+  };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(VendingMachine);
