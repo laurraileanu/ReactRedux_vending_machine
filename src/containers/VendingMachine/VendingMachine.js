@@ -11,9 +11,9 @@ class VendingMachine extends Component {
     amountInput: "",
     feedback: {
       message: null,
-      type: "danger",
+      type: "",
     },
-    balance: 0,
+    balance: 100,
     keypad: [
       {
         firstL: "A",
@@ -131,28 +131,28 @@ class VendingMachine extends Component {
   // handle the buy method
   handleBuy = () => {
     const combination = this.state.keyCombination.join("");
-
     // check if the combination has a coresponding product
-    let validCombinations = [];
-    this.state.items.forEach((item) => {
-      const combination = item.keyCode;
-      validCombinations.push(combination);
-    });
+    const product = this.state.items.find(
+      (item) => item.keyCode === combination
+    );
 
-    if (validCombinations.includes(combination)) {
+    if (!!product) {
       //if it has a coresponding product procede with updating balance and qtti
-      const product = this.state.items.find(
-        (item) => item.keyCode === combination
-      );
+
       //check if the product has enough quantity
       if (product.qtty > 0) {
         //check if you have enough balance for buying the chosen product
         if (this.state.balance >= product.price) {
           const updatedItems = [...this.state.items];
+
           // get the index of updated product
-          const indexOfUpdatedProduct = this.state.items.indexOf(product);
+          const indexOfUpdatedProduct = this.state.items.findIndex(
+            (item) => item.keyCode === combination
+          );
+
           // make a copy of the product
           const updatedProduct = { ...product };
+
           // update inmutably the qtti and the items copy
           updatedProduct.qtty = product.qtty - 1;
           updatedItems[indexOfUpdatedProduct] = updatedProduct;
